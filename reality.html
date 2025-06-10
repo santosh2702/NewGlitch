@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reality Glitch Detector: Earth’s Orbit</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    body { display: flex; flex-direction: column; align-items: center; font-family: Arial; }
+    canvas { max-width: 600px; margin: 20px; }
+    .slider-container { margin: 10px; }
+  </style>
+</head>
+<body>
+  <h3>Reality Glitch Detector: Earth’s Orbit</h3>
+  <div class="slider-container">
+    <label>Shadow Force (μAU): <input type="range" id="shadow" min="0" max="0.01" step="0.0001" value="0"></label>
+    <span id="shadow-value">0</span>
+  </div>
+  <canvas id="orbitChart"></canvas>
+<script>
+const orbitData = {
+  times: ["2025-01-01", "2025-01-02", "2025-01-03", "2025-01-04", "2025-01-05", "2025-01-06", "2025-01-07", "2025-01-08", "2025-01-09", "2025-01-10"],
+  observed_x: [0.983, 0.985, 0.987, 0.989, 0.991, 0.993, 0.995, 0.997, 0.999, 1.015],
+  predicted_x: [0.984, 0.986, 0.988, 0.990, 0.992, 0.994, 0.996, 0.998, 1.000, 1.014],
+  deviations: [0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001],
+  glitch_detected: false
+};
+
+const ctx = document.getElementById('orbitChart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: orbitData.times,
+    datasets: [
+      {
+        label: 'Observed X (NASA, AU)',
+        data: orbitData.observed_x,
+        borderColor: '#4B0082',
+        backgroundColor: 'rgba(75, 0, 130, 0.2)',
+        fill: false,
+        tension: 0.4
+      },
+      {
+        label: 'Predicted X (Keplerian, AU)',
+        data: [],
+        borderColor: '#FF4500',
+        backgroundColor: 'rgba(255, 69, 0, 0.2)',
+        fill: false,
+        tension: 0.1
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      title: { display: true, text: 'Orbit Glitch Detector: Earth vs. Sun', color: '#333' },
+      subtitle: { display: true, text: 'Does a shadow force bend the orbit?', color: '#666' }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Date (2025)' }, grid: { color: '#ccc' } },
+      y: { title: { display: true, text: 'X Position (AU)' }, min: 0.9, max: 1.1, grid: { color: '#ccc' } }
+    }
+  }
+});
+
+function updateChart() {
+  try {
+    const shadowForce = parseFloat(document.getElementById('shadow').value);
+    document.getElementById('shadow-value').textContent = shadowForce.toFixed(4);
+    const predicted = orbitData.predicted_x.map((x, i) => x * (1 + shadowForce * Math.sin(i * 0.1)));
+    chart.data.datasets[1].data = predicted;
+    const deviations = orbitData.observed_x.map((obs, i) => Math.abs(obs - predicted[i]));
+    chart.options.plugins.subtitle.text = deviations.some(d => d > 0.01) || shadowForce > 0 ?
+      'Cosmic bug detected—new axiom needed?' : 'Does a shadow force bend the orbit?';
+    chart.update();
+  } catch (error) {
+    console.error('Chart update error:', error);
+    alert('Error updating chart. Check console for details.');
+  }
+}
+
+// Initial chart render
+updateChart();
+
+// Update chart on slider input
+document.getElementById('shadow').addEventListener('input', updateChart);
+</script>
+</body>
+</html>
